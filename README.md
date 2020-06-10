@@ -1,88 +1,181 @@
-# Capstone Project Requirements
+<center> <h1>Stock predictions (S&P 500 index) via Presidential Tweets 
+</h1> </center>
 
-## Introduction
+<img src="images/TrumpsBull.png" width=1200>
+There are numerous resources (get rich quick schemes) on just how to play to stock market. This project will attempt to make predictions on the S&P 500 index concentrating on the daily close value, as opposed to the corporate adj. close value. The data source was secured directly within this jupyter notebook via the pandas datareader library. With this I was able to pass in the parameters (dates) of the time-series data I required. For additional features to predict on I chose to use President Trumps tweets, to make this interesting indeed. Most stock predictors use news sources, financial reports, as well as sentiment analysis I'll be attempting to recreate here on a much smaller scale. 
 
-In this lesson, we'll discuss the requirements for our **Capstone Project**!
+#### Time series data
+```python
+import pandas_datareader.data as web
 
-## Objectives
+start = dt.datetime(2017, 1, 1)
+end = dt.datetime(2019, 1, 1) # for current data use (now)
 
-You will be able to:
+SNP = web.DataReader('^GSPC', 'yahoo', start, end).sort_index(ascending=False) # index
+```
+**Here used Yahoo Fiancial as the endpoint, other sources available directly within python via the pandas library are:**
 
-* Describe all required aspects of the final project
-* Describe what constitutes a successful project
+* Tiingo
+* IEX
+* Alpha Vantage
+* Enigma
+* Quandl
+* St.Louis FED (FRED)
+* Kenneth French’s data library
+* World Bank
+* OECD
+* Eurostat
+* Thrift Savings Plan
+* Nasdaq Trader symbol definitions
+* Stooq
+* MOEX 
 
-## Introduction
 
-Congratulations on making it to the final project! It's been a long journey, but we can finally see the light at the end of the tunnel!
+**Stock Data dictionary:**
+* Date - date of trade
+* High - highest for the trading day
+* Low - lowest for the trading day
+* Open - opening price of stock begining of trading day
+* Close - end of a trading session
+* Volume - the number of shares that changed hands during a given day
+* Adj Close - close based on corporate actions
 
-![Actual Footage of you seeing the light at the end of the tunnel](/end-of-tunnel.gif)
+Notice the date is already on the x axis
+<img src="images/snp.head.png" width=600>
 
-Now that you've learned everything we have to teach you, it's time to show off and flex your data science muscles with your own **_Capstone Project_**! This project will allow you to showcase everything you've learned as a data scientist to by completing a professional-level data science project of your choosing. This project will be significantly larger than any project you've completed so far, and will be the crown jewel of your portfolio. A strong capstone project is the single most important thing you can do to get the attention of potential employers, so be prepared to put as much effort into this project as possible - the results will be **_worth it!_**
 
-![Your portfolio brings all the employers to your inbox](/milkshake.gif)
+Here I verified that the index was indeed a datetime object 
+<img src="images/snp.index.png" width=600>
 
-## Topic Requirements
+Line plot on daily close prices of the entire dataset predictions will be calculated on
+<img src="images/snp.line.plot.png" width=600>
 
-Your project should develop a data product or analysis related to a single topic. You are completely free to choose any topic that interests you, but keep in mind that you will need to complete this project end-to-end, including sourcing your own data. When choosing a topic, think through these questions:  
+Dot plot of the same metric
+<img src="images/snp.dot.plot.png" width=600>
 
-* What would I be motivated to work on?
-* What data could I use?
-* How could an individual or organization use my product or findings?
-* What will I be able to accomplish in the time I have available?
-* What challenges do I foresee with this project?
 
-## Technical Requirements
+S&P histogram displays normal distribution
+<img src="images/snp.hist.png" width=600>
 
-Your project must meet the following technical requirements:
+#### Stationarity
+<img src="images/rolling_mean.png" width=600>
 
-1. **_No Off-The-Shelf Datasets_**. This project is a chance for you to highlight your critical thinking and data sourcing skills by finding a good dataset to answer a useful question. You _can_ use a pre-existing dataset, but you should consider combining it with other datasets and/or engineering your own features. The goal is to showcase your ability to find and work with data, so just grabbing a squeaky-clean dataset is out of the question.
+* Results of Dickey-Fuller Test: 
+* Test Statistic                  -0.297582
+* p-value                          0.925846
+* #Lags Used                       8.000000
+* Number of Observations Used    493.000000
+* Critical Value (1%)             -3.443684
+* Critical Value (5%)             -2.867420
+* Critical Value (10%)            -2.569902
+* dtype: float64
 
-2. **_Strong Data Exploration, with at least 4 relevant data visualizations._**  There are few skills that impress employers more than the ability to dive into a new dataset and produce engaging visualizations that communicate important information. For this project, anything worth knowing is worth visualizing. Level up your project by digging into more advanced visualization libraries like seaborn!
+#### Natural Language Toolkit
+Presidential tweets are in two json files for the dates needed, many exceed Twitter's 140 chars rule. Which didn't pose a problem for the textblob library and provided additional data to use for sentiment analysis. 'TextBlob is a Python (2 and 3) library for processing textual data. It provides a simple API for diving into common natural language processing (NLP) tasks such as part-of-speech tagging, noun phrase extraction, sentiment analysis, classification, translation, and more.'
 
-3. **_Makes use of Supervised Learning_**. It is great to use **_Unsupervised Learning_** techniques as needed in your project (for instance, segmentation with clustering algorithms), but supervised learning should play a central role in answering your question. 
 
-4. **_Explicitly makes use of a Data Science Process such as OSEMN or CRISP-DM_**. Select a Data Science Process to use to give structure to your project. Each step in the process should correspond to a section in your Jupyter Notebook.  
 
-5. **_A well-defined goal with clearly presented results._** Your project should provide any background context needed to understand the project you are working on and why it's important. For instance, if you are trying to detect fault lines using Earthquake data, you should review the topic and your dataset so that the reader can understand your work.  Similarly, the results of your project should be clearly communicated. Do not just tell your audience the final accuracy of your models--be sure to answer "big picture" questions as well. For instance: Would you recommend shipping this model to production, or is more work needed? 
+```python
+# tweets are already in decending order
+Tweets_17_df.head()
+```
+<img src="images/tweets.head.png" width=600>
 
-**_NOTE:_** Inconclusive results are okay--from a purely scientific perspective, they are no more or less important or valuable than any other kinds of results. If your results are inconclusive, you should discuss what your next steps would be from there. For instance, what do you think it would take to get conclusive results--more data? Different data that was unavailable? Both? 
+```python
+import nltk
+from textblob import TextBlob
+# Performing a test on the TextBlob library
+tweet_example = TextBlob('the democrats have been told and fully understand that there can be no daca without the desperately needed wall at the southern border and an end to the horrible chain migration ridiculous lottery system of immigration etc we must protect our country at all cost')
 
-## Requirements for Online Students Only
+tweet_example.tags
+[('the', 'DT'),
+ ('democrats', 'NNS'),
+ ('have', 'VBP'),
+ ('been', 'VBN'),
+ ('told', 'VBN'),
+ ('and', 'CC'),
+ ('fully', 'RB'),
+ ('understand', 'VBP'),
+ ('that', 'IN'),
+ ('there', 'EX'),
+ ('can', 'MD'),
+ ('be', 'VB'),
+ ('no', 'DT'),
+ ('daca', 'NN'),
+ ('without', 'IN'),
+ ('the', 'DT'),
+ ('desperately', 'RB'),
+ ('needed', 'VBN'),
+ ('wall', 'NN'),
+ ('at', 'IN'),
+ ('the', 'DT'),
+ ('southern', 'JJ'),
+ ('border', 'NN'),
+ ('and', 'CC'),
+ ('an', 'DT'),
+ ('end', 'NN'),
+ ('to', 'TO'),
+ ('the', 'DT'),
+ ('horrible', 'JJ'),
+ ('chain', 'NN'),
+ ('migration', 'NN'),
+ ('ridiculous', 'JJ'),
+ ('lottery', 'NN'),
+ ('system', 'NN'),
+ ('of', 'IN'),
+ ('immigration', 'NN'),
+ ('etc', 'FW'),
+ ('we', 'PRP'),
+ ('must', 'MD'),
+ ('protect', 'VB'),
+ ('our', 'PRP$'),
+ ('country', 'NN'),
+ ('at', 'IN'),
+ ('all', 'DT'),
+ ('cost', 'NN')]
+ 
+ tweet_example.words
+ WordList(['the', 'democrats', 'have', 'been', 'told', 'and', 'fully', 'understand', 'that', 'there', 'can', 'be', 'no', 'daca', 'without', 'the', 'desperately', 'needed', 'wall', 'at', 'the', 'southern', 'border', 'and', 'an', 'end', 'to', 'the', 'horrible', 'chain', 'migration', 'ridiculous', 'lottery', 'system', 'of', 'immigration', 'etc', 'we', 'must', 'protect', 'our', 'country', 'at', 'all', 'cost'])
+```
+The textblob library
+* polarity - how positive or negative a word is -1 very neg, +1 very pos
+* subjectivity - how opinionated a word is 0 fact, +1 very much an opinion
 
-### Deliverables
+Here I tested the sentiment analysis of the textblob library available in python, with this test I concluded that there was no difference in passing in cleaned text over the default text of a json file. 
+```python
+# TextBlob test
+# values are identical when lowercase and all punctuations removed.
+TextBlob('the democrats have been told and fully understand that there can be no daca without the desperately needed wall at the southern border and an end to the horrible chain migration ridiculous lottery system of immigration etc we must protect our country at all cost').sentiment
+Sentiment(polarity=-0.48333333333333334, subjectivity=0.75)
+```
 
-For online students, the deliverables for this project consist of the following three components:
+```python
+# sentiment analysis on 2017 dataframe
+polarity = lambda x: TextBlob(x).sentiment.polarity
+subjectivity = lambda x: TextBlob(x).sentiment.subjectivity
 
-1. A Jupyter notebook for a presentation.
-  * The Jupyter notebook will have two components:
-    1. An **_Abstract_** section that briefly explains your problem, your methodology, and your findings, and business recommendations as a result of your findings. This section should be 1-2 paragraphs long.  
-    2. The technical analysis for a data science audience. This detailed technical analysis should explicitly follow a Data Science Process as outlined in the previous section. It should be well-formatted and organized, and should contain all code, visualizations, and detailed explanations/analysis.
-    
-2. An organized **README.md** file in the GitHub repository containing your project code that describes the contents of the repository. This file should be the source of information for navigating through all the code in your repository. 
-    
-3. A blog post showcasing your project, with a focus on your methodology and findings. A well-written blog post about your project will probably be the first thing most recruiters and hiring managers see, so really take the time to polish up this blog post and explain your project, methodology, and findings/business recommendations in a clear, concise manner. This blog post should cover everything important about your project, but remember that your audience for this blog post will largely be non-technical. Your blog post should definitely contain visualizations, code snippets, and anything else you find important, but don't get bogged down trying to explain highly technical concepts. Your blog post should provide a link to the Github repository containing your actual project, for people that want to really dive into the technical aspects of your project.
-* Refer back to the [Blogging Guidelines](https://github.com/learn-co-curriculum/dsc-welcome-blogging) for the technical requirements and blog ideas.
+Tweets['polarity'] = Tweets['text'].apply(polarity) 
+Tweets['subjectivity'] = Tweets['text'].apply(subjectivity)
 
-### Rubric 
+Tweet_analysis.head()
+```
+<img src="images/WordCloud.png" width=600>
 
-Online students can find a PDF of the rubric for the final capstone project [here](/online_capstone_project_rubric.pdf). 
+<img src="images/tweet.analysis.head.png" width=600>
 
-## Requirements for On-Campus Students Only
+#### Analysis
+Utilizing additional features (sentiment analysis) provided a glance of what is possible in making future forecasting predictions.
+Average model error: 0.01 degrees
+Accuracy: 99.98 % Mean absolute percentage error (MAPE)
+RMSE 0.00893348391850772 (not a good measurement for this type of data)
 
-For on-campus students, your project will be evaluated based on the contents of your GitHub repo, which must contain the following three components:
+The future of stock forecasting and prediction isn't a new concept, with that said the S&P 500 has had unforeseen crashes within the last 50 years:
 
-1. A Jupyter notebook     
-2. An **README.md** file 
-3. Presentation slides
+* 1973 | Conflict in the Middle East **-48.2 percent loss**, 70 months recovery
+* 1980 | Stagflation **-27.1 percentage loss**, 3 months recovery
+* 1987 | Black Monday **-33.5 percentage loss**, 20 months recovery
+* 1990 | Gulf War **-19.9 percentage loss**, 4 month recovery
+* 2000 | The Tech Bubble Bursts **-49.1 percentage loss**, 56 months recovery
+* 2007 | Real Estate Goes Bust **-56.9 percentage loss**, 49 months recovery<br/>
 
-The requirements for these components are described in detail in the rubric for the final capstone project [here](https://docs.google.com/spreadsheets/d/1YUC5_QVu8BEd7xBJumzspH40-KuJtL9KQInQYXGi5bE/edit?usp=sharing). You can learn how your teacher will use the rubric to review the project [here](https://github.com/learn-co-curriculum/dsc-campus-capstone-project-review).
-
-## Example Student Project
-
-Take a look at this [technical report](https://github.com/paulinaczheng/twitter_flu_tracking) from a Flatiron student that used tweet data to predict the weekly number of flu cases during flu season. Pay attention to how well structured the project is, and how much she relies on great visualizations to tell her story for her. Your explanations don't have to be wordy - a visualization is worth a thousand words!
-
-## Summary
-
-The Capstone Project is the most critical part of the program. It gives you a chance to bring together all the skills you've learned into realistic projects and to practice key "business judgement" and communication skills.  Most importantly, it provides employers with strong signal about your technical abilities, and allow you to show the world what an amazing Data Scientist you've become!
-
-The projects are serious and important - they can be passed and they can be failed. Take the project seriously, put the time in, ask for help from your peers or instructors early and often if you need it, and treat the review as a job interview and you'll do great. We're rooting for you to succeed and we're only going to ask you to take a review again if we believe that you need to. We'll also provide open and honest feedback so you can improve as quickly and efficiently as possible.
+Jun/Jul 2020 aarp.org
