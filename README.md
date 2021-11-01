@@ -1,7 +1,7 @@
 <center> <h1>Stock predictions (S&P 500 index) via Presidential Tweets 
 </h1> </center>
 
-<img src="images/TwitterS&P.png" width=1200>
+<img src="images/TwitterS&P.jpg" width=1200>
 There are numerous resources (get rich quick schemes) on just how to play to stock market. This project will attempt to make predictions on the S&P 500 index concentrating on the daily close value, as opposed to the corporate adj. close value. The data source was secured directly within this jupyter notebook via the pandas datareader library. With this I was able to pass in the parameters (dates) of the time-series data I required. For additional features to predict on I chose to use President Trumps tweets, to make this interesting indeed. Most stock predictors use news sources, financial reports, as well as sentiment analysis I'll be attempting to recreate here on a much smaller scale. 
 
 #### Time series data
